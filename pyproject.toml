@@ -1,0 +1,15 @@
+[project]
+name = "vgmdj"
+version = "0.1.0"
+description = "Add your description here"
+readme = "README.md"
+requires-python = ">=3.12"
+dependencies = [
+    "dotenv>=0.9.9",
+    "fastapi[standard]>=0.136.1",
+    "mutagen>=1.47.0",
+    "pykhinsider",
+]
+
+[tool.uv.sources]
+pykhinsider = { path = "../pykhinsider" }
