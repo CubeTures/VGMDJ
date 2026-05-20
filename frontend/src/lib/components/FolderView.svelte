@@ -1,23 +1,22 @@
 <script lang="ts">
 	import { PUBLIC_API_URL } from "$env/static/public";
-	import { cn } from "$lib/utility";
 	import {
 		CheckIcon,
 		CornerLeftUpIcon,
 		Disc3Icon,
+		EyeClosedIcon,
+		EyeIcon,
+		EyeOffIcon,
 		FrownIcon,
 		SaveIcon,
 	} from "@lucide/svelte";
 	import { onMount } from "svelte";
 	import { fade } from "svelte/transition";
+	import type { Entry, FolderMetadata, MediaMetadata } from "$lib/types";
+	import MediaButton from "./MediaButton.svelte";
+	import FolderButton from "./FolderButton.svelte";
 
 	const ROOT = "__ROOT_DIR__";
-
-	interface Entry {
-		name: string;
-		isDir: boolean;
-		isHidden: boolean;
-	}
 
 	type Result = "SUCCESS" | "FAILURE" | undefined;
 
@@ -27,6 +26,7 @@
 	let cache: Record<string, Entry[]> = $state({});
 	let hidden: Record<string, boolean> = $state({});
 	let result: Result = $state(undefined);
+	let showHidden = $state(true);
 
 	function checkCache(dirs: string[]): Entry[] | undefined {
 		const key = dirs.length === 0 ? ROOT : dirs.join("/");
@@ -114,20 +114,23 @@
 		loading = false;
 	}
 
+	function getDiscCount(disc: number): string {
+		const [total, visible] = entries
+			.filter((e) => (e.metadata as MediaMetadata).disc_number == disc)
+			.reduce(
+				([total, visible], e) => [
+					total + 1,
+					visible + (e.isHidden ? 0 : 1),
+				],
+				[0, 0],
+			);
+		return `${visible}/${total}`;
+	}
+
 	onMount(() => {
 		walk([]);
 	});
 </script>
-
-{#snippet Button(text: string, onclick: () => void, hidden: boolean)}
-	<button
-		class={cn(
-			"p-2 border border-mauve-400 rounded text-left bg-mauve-200",
-			hidden ? "bg-mauve-50 border-mauve-50 text-mauve-400" : "",
-		)}
-		{onclick}>{text}</button
-	>
-{/snippet}
 
 {#snippet Up(hidden: boolean)}
 	{#if dirs.length > 0}
@@ -150,13 +153,35 @@
 	</div>
 	{#each entries as entry}
 		{#if entry.isDir}
-			{@render Button(entry.name, () => open(entry.name), false)}
+			<FolderButton
+				text={entry.name}
+				metadata={entry.metadata as FolderMetadata}
+				onclick={() => open(entry.name)}
+				hidden={false}
+			/>
 		{:else}
+			{@const meta = entry.metadata as MediaMetadata}
+			{#if meta.track_number == 1}
+				<div
+					class="bg-mauve-400 p-2 -mx-2 px-4 flex justify-between items-center"
+				>
+					<p class="font-bold text-lg">
+						Disc {meta.disc_number}
+					</p>
+					<p>{getDiscCount(meta.disc_number!)}</p>
+				</div>
+			{/if}
 			{@const _hidden =
 				hidden[entry.name] === undefined
 					? entry.isHidden
 					: hidden[entry.name]}
-			{@render Button(entry.name, () => hide(entry.name), _hidden)}
+			{#if showHidden || !entry.isHidden}
+				<MediaButton
+					metadata={entry.metadata!}
+					onclick={() => hide(entry.name)}
+					hidden={_hidden}
+				/>
+			{/if}
 		{/if}
 	{/each}
 	{@render Up(true)}
@@ -179,6 +204,16 @@
 			</button>
 		</div>
 	{/if}
+	<button
+		class="bg-mauve-200 border border-mauve-400 rounded-full p-2"
+		onclick={() => (showHidden = !showHidden)}
+	>
+		{#if showHidden}
+			<EyeIcon />
+		{:else}
+			<EyeOffIcon />
+		{/if}
+	</button>
 	{@render Up(false)}
 </div>
 

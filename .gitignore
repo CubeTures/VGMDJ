@@ -1,3 +1,6 @@
 .venv
 *.env
+src/__pycache__
+pykhinsider
 Music
+deploy.sh

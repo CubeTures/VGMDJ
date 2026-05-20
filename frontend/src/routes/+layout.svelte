@@ -4,10 +4,14 @@
 	import {
 		FolderIcon,
 		HardDriveDownloadIcon,
+		SettingsIcon,
 		ThumbsDownIcon,
 	} from "@lucide/svelte";
+	import { page } from "$app/state";
 
 	let { children } = $props();
+
+	let path = $derived(page.url.pathname);
 </script>
 
 <svelte:head
@@ -17,10 +21,28 @@
 	/></svelte:head
 >
 <div class="h-dvh w-dvw flex flex-col">
-	<div class="grow overflow-y-scroll bg-mauve-50 relative">{@render children()}</div>
+	<div class="grow overflow-y-scroll bg-mauve-50 relative">
+		{@render children()}
+	</div>
 	<div class="bg-mauve-200 flex justify-around p-6">
-		<a href="/"><HardDriveDownloadIcon /></a>
-		<a href="/boo"><ThumbsDownIcon /></a>
-		<a href="/files"><FolderIcon /></a>
+		<a
+			href="/"
+			class={path == "/" ? "" : "unselected"}><HardDriveDownloadIcon /></a
+		>
+		<a
+			href="/files"
+			class={path == "/files/" ? "" : "unselected"}><FolderIcon /></a
+		>
+		<a
+			href="/prefs"
+			class={path == "/prefs/" ? "" : "unselected"}><SettingsIcon /></a
+		>
 	</div>
 </div>
+
+<style>
+	.unselected {
+		filter: brightness(0) saturate(100%) invert(45%) sepia(6%)
+			saturate(1049%) hue-rotate(246deg) brightness(91%) contrast(83%);
+	}
+</style>

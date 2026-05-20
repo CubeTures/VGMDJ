@@ -1,0 +1,7 @@
+.venv
+frontend/**
+!frontend/build
+!frontend/build/**
+.env
+.env.example
+src/__pycache__

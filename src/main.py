@@ -1,12 +1,18 @@
 import os
 from pathlib import Path
-from fastapi import FastAPI
+from fastapi import FastAPI, HTTPException
 from fastapi.staticfiles import StaticFiles
+# from fastapi.responses import FileResponse
 from fastapi.middleware.cors import CORSMiddleware
+from typing import Any
+from src import JELLYFIN_URL, JELLYFIN_TOKEN
 from src.utils import get_dir
 from src.ignore import add_ignore, remove_ignore, read_ignore, unescape_ignore
+import src.jellyfin as jf
+from src.metadata import read_metadata, get_hidden_count
+from src.constants import MUSIC_EXTENSIONS
 
-MUSIC_EXTENSIONS = {".mp3", ".flac", ".wav", ".aac", ".ogg", ".m4a"}
+client = jf.JellyfinClient(JELLYFIN_URL, JELLYFIN_TOKEN)
 
 app = FastAPI()
 
@@ -15,9 +21,6 @@ app.add_middleware(
     allow_origins=["http://localhost:5173", "http://localhost:8000"],
     allow_methods=["*"],
 )
-
-STATIC_DIR = Path(__file__).parent.parent / "frontend" / "build"
-app.mount("/web", StaticFiles(directory=STATIC_DIR, html=True), name="web")
 
 
 @app.get("/health")
@@ -28,7 +31,7 @@ def health_check() -> str:
 @app.post("/walk")
 def folders(dirs: list[str] = []):
     base = get_dir(dirs)
-    result: list[dict[str, str | bool]] = []
+    result: list[dict[str, Any]] = []
     ignored = read_ignore(base / ".ignore")
     ignored = unescape_ignore(ignored)
 
@@ -39,11 +42,14 @@ def folders(dirs: list[str] = []):
         ):
             continue
 
+        path = Path(entry.path)
+        metadata = read_metadata(path) if not entry.is_dir() else get_hidden_count(path)
         result.append(
             {
                 "name": entry.name,
                 "isDir": entry.is_dir(),
                 "isHidden": entry.name in ignored,
+                "metadata": metadata,
             }
         )
 
@@ -59,3 +65,32 @@ def hide(hidden: dict[str, bool], dirs: list[str] = []):
     remove = [f for (f, hide) in hidden.items() if not hide]
     add_ignore(ignore, add)
     remove_ignore(ignore, remove)
+
+    if len(dirs) > 1:
+        folder = client.search_folder(dirs[-1], dirs[-2])
+        if folder:
+            client.refresh(folder)
+        else:
+            client.refresh_full()
+    else:
+        client.refresh_full()
+
+
+@app.post("/boo")
+def boo():
+    song = client.currently_playing()
+    if song == None:
+        raise HTTPException(409)
+    print(song.file_name)
+    hide({song.file_name: True}, [song.album_artist, song.album])
+
+
+STATIC_DIR = Path(__file__).parent.parent / "frontend" / "build"
+app.mount("/", StaticFiles(directory=STATIC_DIR, html=True), name="static")
+
+# @app.get("/{full_path:path}")
+# def spa_fallback(full_path: str):
+#     file = STATIC_DIR / f"{full_path}.html"
+#     if file.exists():
+#         return FileResponse(file)
+#     return FileResponse(STATIC_DIR / "index.html")
