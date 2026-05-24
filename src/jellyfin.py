@@ -1,8 +1,10 @@
 import uuid
-import requests
-from pathlib import Path
 from enum import StrEnum
-from typing import cast, Any
+from pathlib import Path
+from typing import Any, cast
+
+import requests
+
 from src import JELLYFIN_USER_ID
 
 

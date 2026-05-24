@@ -1,9 +1,12 @@
-from mutagen._file import File, FileType  # type: ignore
-from pathlib import Path
 import os
 from functools import reduce
-from src import MUSIC_DIR
+from pathlib import Path
 from typing import cast
+
+from mutagen._file import File, FileType  # type: ignore
+from filelock import FileLock
+
+from src import MUSIC_DIR
 from src.constants import MUSIC_EXTENSIONS
 from src.jellyfin import JellyfinClient
 
@@ -49,3 +52,7 @@ def refresh_dir_or_fallback(client: JellyfinClient, dirs: list[str]):
             client.refresh_full()
     else:
         client.refresh_full()
+
+
+def lock_file(path: Path) -> FileLock:
+    return FileLock(path.with_suffix(path.suffix + ".lock"), is_singleton=True)

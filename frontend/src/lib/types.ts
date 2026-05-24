@@ -19,3 +19,9 @@ export interface Entry {
 	isHidden: boolean;
 	metadata: FolderMetadata | MediaMetadata;
 }
+
+export interface DownloadStatusMessage {
+	title: string;
+	current: number;
+	total: number;
+}

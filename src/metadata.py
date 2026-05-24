@@ -1,10 +1,12 @@
+import os
 from dataclasses import dataclass
 from pathlib import Path
+from typing import Any, cast
+
 from mutagen._file import File, FileType  # type: ignore
-from typing import cast, Any
-import os
-from src.ignore import read_ignore
+
 from src.constants import MUSIC_EXTENSIONS
+from src.ignore import read_ignore
 
 
 @dataclass(frozen=True)

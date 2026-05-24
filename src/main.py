@@ -1,17 +1,21 @@
 import os
 from pathlib import Path
-from fastapi import FastAPI, HTTPException, Body
-from fastapi.staticfiles import StaticFiles
-from fastapi.middleware.cors import CORSMiddleware
 from typing import Any
-from src import JELLYFIN_URL, JELLYFIN_TOKEN
-from src.utils import dirs_to_path, refresh_dir_or_fallback
-from src.ignore import add_ignore, remove_ignore, read_ignore
-from src.jellyfin import JellyfinClient
-from src.metadata import read_metadata, get_hidden_count
-from src.prefs import load_prefs, save_prefs
-from src.constants import MUSIC_EXTENSIONS
+
+from fastapi import Body, FastAPI, HTTPException, BackgroundTasks, WebSocket
+from fastapi.middleware.cors import CORSMiddleware
+from fastapi.staticfiles import StaticFiles
+from pydantic import BaseModel
+
+from src import JELLYFIN_TOKEN, JELLYFIN_URL
 from src.auto_hide import refresh_auto_hidden
+from src.constants import MUSIC_EXTENSIONS
+from src.ignore import add_ignore, read_ignore, remove_ignore
+from src.jellyfin import JellyfinClient
+from src.metadata import TrackMeta, get_hidden_count, read_metadata
+from src.prefs import load_prefs, save_prefs, PREFS_FILE
+from src.utils import dirs_to_path, refresh_dir_or_fallback, lock_file
+from src.khinsider import DownloadInfo, run_download
 
 client = JellyfinClient(JELLYFIN_URL, JELLYFIN_TOKEN)
 
@@ -53,7 +57,16 @@ def folders(dirs: list[str] = []):
             }
         )
 
-    result.sort(key=lambda entry: entry["name"])
+    def sort_key(entry: dict[str, Any]) -> tuple[float, float, str]:
+        meta = entry["metadata"]
+        if isinstance(meta, TrackMeta):
+            disc = meta.disc_number or float("inf")
+            track = meta.track_number or float("inf")
+            title = meta.title or entry["name"]
+            return (disc, track, title)
+        return (float("inf"), float("inf"), entry["name"])
+
+    result.sort(key=sort_key)
     return result
 
 
@@ -84,10 +97,54 @@ def get_auto_hide():
 
 @app.post("/auto-hide")
 def set_auto_hide(time: int = Body(...)):
-    prefs = load_prefs()
-    prefs.auto_hide_time = time
-    save_prefs(prefs)
+    with lock_file(PREFS_FILE):
+        prefs = load_prefs()
+        prefs.auto_hide_time = time
+        save_prefs(prefs)
     refresh_auto_hidden(client, prefs.auto_hide_time)
+
+
+class KHInsiderRequest(BaseModel):
+    url: str
+    album: str
+    album_artist: str
+    quality: str
+
+
+@app.post("/download/khinsider")
+def download_khinsider(
+    req: KHInsiderRequest,
+    background_tasks: BackgroundTasks,
+):
+    info = DownloadInfo(
+        req.album,
+        req.album_artist,
+        req.url,
+        req.quality,
+    )
+    info.set_album_from_url(req.url)
+    background_tasks.add_task(run_download, client, info)
+
+
+@app.websocket("/download-status")
+async def download_status(websocket: WebSocket):
+    await websocket.accept()
+    while True:
+        # listen to updates to active downloads
+        # ideally a push instead of pull
+        pass
+
+
+@app.post("/cover/album_artist")
+def album_artist_cover(album_artist: str, image: str):
+    pass
+
+
+@app.post("/cover/album")
+def album_cover(
+    album: str, album_artist: str, image: str, override_tracks: bool = False
+):
+    pass
 
 
 STATIC_DIR = Path(__file__).parent.parent / "frontend" / "build"

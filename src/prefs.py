@@ -1,7 +1,9 @@
-from dataclasses import dataclass, asdict
-from src import WORKING_DIR
-from pathlib import Path
 import json
+from dataclasses import asdict, dataclass
+from pathlib import Path
+
+from src import WORKING_DIR
+from src.utils import lock_file
 
 PREFS_FILE = Path(WORKING_DIR) / "prefs.json"
 
@@ -12,12 +14,14 @@ class Prefs:
 
 
 def load_prefs():
-    if not PREFS_FILE.exists():
-        return Prefs()
-    with open(PREFS_FILE, "r") as file:
-        return Prefs(json.load(file))
+    with lock_file(PREFS_FILE):
+        if not PREFS_FILE.exists():
+            return Prefs()
+        with open(PREFS_FILE, "r") as file:
+            return Prefs(**json.load(file))
 
 
 def save_prefs(prefs: Prefs):
-    with open(PREFS_FILE, "w") as file:
-        file.write(json.dumps(asdict(prefs)))
+    with lock_file(PREFS_FILE):
+        with open(PREFS_FILE, "w") as file:
+            file.write(json.dumps(asdict(prefs)))

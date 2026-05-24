@@ -15,8 +15,7 @@
 		const res = await fetch(`${PUBLIC_API_URL}/auto-hide`, {
 			headers: { "Content-Type": "application/json" },
 		});
-		const json = await res.json();
-		time = json["auto_hide_time"];
+		time = await res.json();
 	}
 
 	async function save() {
