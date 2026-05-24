@@ -1,18 +1,19 @@
 import os
 from pathlib import Path
-from fastapi import FastAPI, HTTPException
+from fastapi import FastAPI, HTTPException, Body
 from fastapi.staticfiles import StaticFiles
-# from fastapi.responses import FileResponse
 from fastapi.middleware.cors import CORSMiddleware
 from typing import Any
 from src import JELLYFIN_URL, JELLYFIN_TOKEN
-from src.utils import get_dir
-from src.ignore import add_ignore, remove_ignore, read_ignore, unescape_ignore
-import src.jellyfin as jf
+from src.utils import dirs_to_path, refresh_dir_or_fallback
+from src.ignore import add_ignore, remove_ignore, read_ignore
+from src.jellyfin import JellyfinClient
 from src.metadata import read_metadata, get_hidden_count
+from src.prefs import load_prefs, save_prefs
 from src.constants import MUSIC_EXTENSIONS
+from src.auto_hide import refresh_auto_hidden
 
-client = jf.JellyfinClient(JELLYFIN_URL, JELLYFIN_TOKEN)
+client = JellyfinClient(JELLYFIN_URL, JELLYFIN_TOKEN)
 
 app = FastAPI()
 
@@ -30,10 +31,9 @@ def health_check() -> str:
 
 @app.post("/walk")
 def folders(dirs: list[str] = []):
-    base = get_dir(dirs)
+    base = dirs_to_path(dirs)
     result: list[dict[str, Any]] = []
     ignored = read_ignore(base / ".ignore")
-    ignored = unescape_ignore(ignored)
 
     for entry in os.scandir(base):
         if (
@@ -59,21 +59,13 @@ def folders(dirs: list[str] = []):
 
 @app.post("/hide")
 def hide(hidden: dict[str, bool], dirs: list[str] = []):
-    base = get_dir(dirs)
+    base = dirs_to_path(dirs)
     ignore = base / ".ignore"
     add = [f for (f, hide) in hidden.items() if hide]
     remove = [f for (f, hide) in hidden.items() if not hide]
     add_ignore(ignore, add)
     remove_ignore(ignore, remove)
-
-    if len(dirs) > 1:
-        folder = client.search_folder(dirs[-1], dirs[-2])
-        if folder:
-            client.refresh(folder)
-        else:
-            client.refresh_full()
-    else:
-        client.refresh_full()
+    refresh_dir_or_fallback(client, dirs)
 
 
 @app.post("/boo")
@@ -85,12 +77,18 @@ def boo():
     hide({song.file_name: True}, [song.album_artist, song.album])
 
 
+@app.get("/auto-hide")
+def get_auto_hide():
+    return load_prefs().auto_hide_time
+
+
+@app.post("/auto-hide")
+def set_auto_hide(time: int = Body(...)):
+    prefs = load_prefs()
+    prefs.auto_hide_time = time
+    save_prefs(prefs)
+    refresh_auto_hidden(client, prefs.auto_hide_time)
+
+
 STATIC_DIR = Path(__file__).parent.parent / "frontend" / "build"
 app.mount("/", StaticFiles(directory=STATIC_DIR, html=True), name="static")
-
-# @app.get("/{full_path:path}")
-# def spa_fallback(full_path: str):
-#     file = STATIC_DIR / f"{full_path}.html"
-#     if file.exists():
-#         return FileResponse(file)
-#     return FileResponse(STATIC_DIR / "index.html")

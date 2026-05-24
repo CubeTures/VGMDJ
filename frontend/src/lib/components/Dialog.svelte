@@ -13,8 +13,10 @@
 	class="m-auto rounded"
 	bind:this={dialog}
 	onclick={(e) => {
-		e.stopPropagation();
-		dialog?.close();
+		if (e.target == dialog) {
+			e.stopPropagation();
+			dialog?.close();
+		}
 	}}
 >
 	{@render children()}

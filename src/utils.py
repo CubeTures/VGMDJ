@@ -1,8 +1,11 @@
-import mutagen
+from mutagen._file import File, FileType  # type: ignore
 from pathlib import Path
 import os
 from functools import reduce
 from src import MUSIC_DIR
+from typing import cast
+from src.constants import MUSIC_EXTENSIONS
+from src.jellyfin import JellyfinClient
 
 
 def tag_folder(album: str, album_artist: str, path: Path):
@@ -13,7 +16,7 @@ def tag_folder(album: str, album_artist: str, path: Path):
 
     for file in os.listdir(path):
         file_path = path / file
-        tags = mutagen.File(file_path, easy=True)
+        tags = cast(FileType | None, File(file_path, easy=True))
 
         if tags is None:
             continue
@@ -22,8 +25,27 @@ def tag_folder(album: str, album_artist: str, path: Path):
             if value:
                 tags[key] = value
 
-        tags.save()
+        tags.save()  # type: ignore
 
 
-def get_dir(dirs: list[str]) -> Path:
+def dirs_to_path(dirs: list[str]) -> Path:
     return reduce(lambda acc, f: acc / f, dirs, Path(MUSIC_DIR))
+
+
+def path_to_dirs(path: Path) -> list[str]:
+    return list(path.relative_to(MUSIC_DIR).parts)
+
+
+def is_song(path: Path) -> bool:
+    return path.is_file and path.suffix in MUSIC_EXTENSIONS
+
+
+def refresh_dir_or_fallback(client: JellyfinClient, dirs: list[str]):
+    if len(dirs) > 1:
+        folder = client.search_folder(dirs[-1], dirs[-2])
+        if folder:
+            client.refresh(folder)
+        else:
+            client.refresh_full()
+    else:
+        client.refresh_full()

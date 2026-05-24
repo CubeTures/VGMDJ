@@ -3,7 +3,7 @@ from pathlib import Path
 from mutagen._file import File, FileType  # type: ignore
 from typing import cast, Any
 import os
-from src.ignore import read_ignore, unescape_ignore
+from src.ignore import read_ignore
 from src.constants import MUSIC_EXTENSIONS
 
 
@@ -65,7 +65,6 @@ def get_hidden_count(path: Path) -> dict[str, str | int]:
     dir_count = 0
 
     ignored = read_ignore(path / ".ignore")
-    ignored = unescape_ignore(ignored)
 
     for entry in os.scandir(path):
         if entry.is_dir():
