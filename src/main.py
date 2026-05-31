@@ -1,13 +1,18 @@
 import os
 from pathlib import Path
 from typing import Any
+import json
 
-from fastapi import Body, FastAPI, HTTPException, BackgroundTasks, WebSocket
+from fastapi import Body, FastAPI, HTTPException, BackgroundTasks
 from fastapi.middleware.cors import CORSMiddleware
 from fastapi.staticfiles import StaticFiles
+from fastapi.responses import StreamingResponse
 from pydantic import BaseModel
+from contextlib import asynccontextmanager
+import asyncio
 
 from src import JELLYFIN_TOKEN, JELLYFIN_URL
+from src.status import set_loop, subscribe, unsubscribe
 from src.auto_hide import refresh_auto_hidden
 from src.constants import MUSIC_EXTENSIONS
 from src.ignore import add_ignore, read_ignore, remove_ignore
@@ -17,9 +22,16 @@ from src.prefs import load_prefs, save_prefs, PREFS_FILE
 from src.utils import dirs_to_path, refresh_dir_or_fallback, lock_file
 from src.khinsider import DownloadInfo, run_download
 
-client = JellyfinClient(JELLYFIN_URL, JELLYFIN_TOKEN)
+_client = JellyfinClient(JELLYFIN_URL, JELLYFIN_TOKEN)
 
-app = FastAPI()
+
+@asynccontextmanager
+async def lifespan(_: FastAPI):
+    set_loop(asyncio.get_running_loop())
+    yield
+
+
+app = FastAPI(lifespan=lifespan)
 
 app.add_middleware(
     CORSMiddleware,
@@ -78,12 +90,12 @@ def hide(hidden: dict[str, bool], dirs: list[str] = []):
     remove = [f for (f, hide) in hidden.items() if not hide]
     add_ignore(ignore, add)
     remove_ignore(ignore, remove)
-    refresh_dir_or_fallback(client, dirs)
+    refresh_dir_or_fallback(_client, dirs)
 
 
 @app.post("/boo")
 def boo():
-    song = client.currently_playing()
+    song = _client.currently_playing()
     if song == None:
         raise HTTPException(409)
     print(song.file_name)
@@ -101,7 +113,7 @@ def set_auto_hide(time: int = Body(...)):
         prefs = load_prefs()
         prefs.auto_hide_time = time
         save_prefs(prefs)
-    refresh_auto_hidden(client, prefs.auto_hide_time)
+    refresh_auto_hidden(_client, prefs.auto_hide_time)
 
 
 class KHInsiderRequest(BaseModel):
@@ -122,17 +134,21 @@ def download_khinsider(
         req.url,
         req.quality,
     )
-    info.set_album_from_url(req.url)
-    background_tasks.add_task(run_download, client, info)
+    background_tasks.add_task(run_download, _client, info)
 
 
-@app.websocket("/download-status")
-async def download_status(websocket: WebSocket):
-    await websocket.accept()
-    while True:
-        # listen to updates to active downloads
-        # ideally a push instead of pull
-        pass
+@app.get("/download-status")
+def download_status() -> StreamingResponse:
+    async def stream():
+        queue = subscribe()
+        try:
+            while True:
+                payload = await queue.get()
+                yield f"data: {json.dumps(payload)}\n\n"
+        finally:
+            unsubscribe(queue)
+
+    return StreamingResponse(stream(), media_type="text/event-stream")
 
 
 @app.post("/cover/album_artist")

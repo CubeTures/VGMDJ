@@ -14,7 +14,7 @@ def _song_duration(path: Path) -> float | None:
     return audio.info.length if (audio and audio.info) else None
 
 
-def refresh_auto_hidden_single(client: JellyfinClient, time: int, folder: Path):
+def refresh_auto_hidden_single(client: JellyfinClient | None, time: int, folder: Path):
     ignore_file = Path(folder / ".ignore")
     entries = read_ignore(ignore_file)
 
@@ -26,15 +26,16 @@ def refresh_auto_hidden_single(client: JellyfinClient, time: int, folder: Path):
             continue
 
         name = song.name
-        is_over = duration < time
+        is_under = duration < time
         is_auto = entries.get(name, {}).get("auto", False)
-        if is_over and name not in entries:
+        if is_under and name not in entries:
             entries[name] = {"auto": True}
-        elif not is_over and is_auto:
+        elif not is_under and is_auto:
             entries.pop(name)
 
     write_ignore(ignore_file, entries)
-    refresh_dir_or_fallback(client, path_to_dirs(folder))
+    if client is not None:
+        refresh_dir_or_fallback(client, path_to_dirs(folder))
 
 
 def refresh_auto_hidden(client: JellyfinClient, time: int):

@@ -21,7 +21,24 @@ export interface Entry {
 }
 
 export interface DownloadStatusMessage {
-	title: string;
-	current: number;
-	total: number;
+	id: string;
+	meta: DownloadStatusMessageMeta;
+	timestamp: number;
+	status: string;
+	progress?: DownloadStatusMessageProgress;
+}
+
+export interface DownloadStatusMessageMeta {
+	game: string;
+	franchise: string;
+	album: string;
+	quality: string;
+}
+
+export interface DownloadStatusMessageProgress {
+	filename: string;
+	percent: string;
+	size: string;
+	speed: string;
+	track: string;
 }

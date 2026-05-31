@@ -49,7 +49,7 @@ class JellyfinClient:
     def search_folder(self, album: str, album_artist: str) -> uuid.UUID | None:
         data = self.search(album, MediaType.MUSIC_ALBUM)
         for item in data["Items"]:
-            if item["AlbumArtist"] == album_artist:
+            if "AlbumArtist" in item and item["AlbumArtist"] == album_artist:
                 return uuid.UUID(item["Id"])
         return None
 

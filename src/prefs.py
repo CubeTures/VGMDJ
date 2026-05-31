@@ -8,6 +8,10 @@ from src.utils import lock_file
 PREFS_FILE = Path(WORKING_DIR) / "prefs.json"
 
 
+# add pref for update speed for streams
+# add pref for max record count to keep in downloads
+
+
 @dataclass
 class Prefs:
     auto_hide_time: int = 0
