@@ -1,9 +1,11 @@
+import csv
+import io
 import os
 from pathlib import Path
 from typing import Any
 import json
 
-from fastapi import Body, FastAPI, HTTPException, BackgroundTasks
+from fastapi import Body, FastAPI, File, HTTPException, BackgroundTasks, UploadFile
 from fastapi.middleware.cors import CORSMiddleware
 from fastapi.staticfiles import StaticFiles
 from fastapi.responses import StreamingResponse
@@ -137,6 +139,24 @@ def download_khinsider(
     background_tasks.add_task(run_download, _client, info)
 
 
+@app.post("/download/csv")
+async def download_csv(
+    background_tasks: BackgroundTasks,
+    file: UploadFile = File(...),
+):
+    content: bytes = await file.read()
+    decoded: str = content.decode("utf-8")
+    reader = csv.reader(io.StringIO(decoded))
+    rows: list[list[str]] = [row for row in reader]
+
+    def download_all(rows: list[list[str]]) -> None:
+        for row in rows:
+            info = DownloadInfo(row[0], row[1], row[2], row[3])
+            run_download(_client, info)
+
+    background_tasks.add_task(download_all, rows)
+
+
 @app.get("/download-status")
 def download_status() -> StreamingResponse:
     async def stream():
@@ -152,14 +172,21 @@ def download_status() -> StreamingResponse:
 
 
 @app.post("/cover/album_artist")
-def album_artist_cover(album_artist: str, image: str):
+def album_artist_cover(dirs: list[str], image: str):
+    # have setting to specify what kind image it is
+    # 	artist = set artist.png
+    # 	album = set cover.png
+    # 	tracks = set all track images
+    #
+    # hit refresh endpoint with imageRefreshMode=FullRefresh
+    # search using kind of image (artist, for artist; album / tracks, for album)
+    # start by manually changing the image and hit api endpoint to try refresh
+
     pass
 
 
 @app.post("/cover/album")
-def album_cover(
-    album: str, album_artist: str, image: str, override_tracks: bool = False
-):
+def album_cover(dirs: list[str], image: str, override_tracks: bool = False):
     pass
 
 

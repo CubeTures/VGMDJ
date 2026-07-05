@@ -23,7 +23,7 @@
 	<div class="grow overflow-y-scroll bg-mauve-50 relative">
 		{@render children()}
 	</div>
-	<div class="bg-mauve-200 flex justify-around p-6">
+	<div class="bg-mauve-200 flex justify-around p-6 border-t border-t-mauve-400">
 		<a
 			href="/"
 			class={path == "/" ? "" : "unselected"}><HardDriveDownloadIcon /></a

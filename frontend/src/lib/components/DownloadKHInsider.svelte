@@ -34,7 +34,7 @@
 		<input
 			id="url"
 			bind:value={url}
-			class="bg-mauve-50 rounded"
+			class="bg-mauve-50 rounded px-1 min-w-0"
 		/>
 
 		<label
@@ -44,7 +44,7 @@
 		<input
 			id="album"
 			bind:value={album}
-			class="bg-mauve-50 rounded"
+			class="bg-mauve-50 rounded px-1 min-w-0"
 		/>
 
 		<label
@@ -54,7 +54,7 @@
 		<input
 			id="albumArtist"
 			bind:value={albumArtist}
-			class="bg-mauve-50 rounded"
+			class="bg-mauve-50 rounded px-1 min-w-0"
 		/>
 
 		<label
@@ -64,7 +64,7 @@
 		<input
 			id="quality"
 			bind:value={quality}
-			class="bg-mauve-50 rounded"
+			class="bg-mauve-50 rounded px-1 min-w-0"
 		/>
 	</div>
 	<div class="flex justify-end">
