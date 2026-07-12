@@ -3,8 +3,8 @@ from functools import reduce
 from pathlib import Path
 from typing import cast
 
-from mutagen._file import File, FileType  # type: ignore
 from filelock import FileLock
+from mutagen._file import File, FileType  # type: ignore
 
 from src import MUSIC_DIR
 from src.constants import MUSIC_EXTENSIONS
@@ -43,11 +43,15 @@ def is_song(path: Path) -> bool:
     return path.is_file and path.suffix in MUSIC_EXTENSIONS
 
 
-def refresh_dir_or_fallback(client: JellyfinClient, dirs: list[str]):
+def refresh_dir_or_fallback(
+    client: JellyfinClient,
+    dirs: list[str],
+    image_refresh_mode: str | None = None,
+):
     if len(dirs) > 1:
         folder = client.search_folder(dirs[-1], dirs[-2])
         if folder:
-            client.refresh(folder)
+            client.refresh(folder, image_refresh_mode=image_refresh_mode)
         else:
             client.refresh_full()
     else:

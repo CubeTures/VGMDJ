@@ -2,17 +2,20 @@
 	import { cn } from "$lib/utility";
 	import { EllipsisVerticalIcon } from "@lucide/svelte";
 	import Dialog from "./Dialog.svelte";
+	import CoverEditor from "./CoverEditor.svelte";
 	import type { FolderMetadata } from "$lib/types";
 
 	interface Props {
 		text: string;
+		dirs: string[];
 		metadata: FolderMetadata;
 		onclick: () => void;
 		hidden: boolean;
 	}
 
-	const { text, metadata, onclick, hidden }: Props = $props();
+	const { text, dirs, metadata, onclick, hidden }: Props = $props();
 	let dialog = $state<HTMLDialogElement>();
+	let opened = $state(false);
 </script>
 
 {#snippet Counts()}
@@ -41,6 +44,7 @@
 	<button
 		onclick={(e) => {
 			e.stopPropagation();
+			opened = true;
 			dialog?.showModal();
 		}}
 	>
@@ -51,6 +55,9 @@
 			>
 				<p class="font-bold">{text}</p>
 				{@render Counts()}
+				{#if opened}
+					<CoverEditor {dirs} />
+				{/if}
 			</div>
 		</Dialog>
 	</button>

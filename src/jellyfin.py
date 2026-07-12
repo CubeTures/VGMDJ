@@ -53,11 +53,17 @@ class JellyfinClient:
                 return uuid.UUID(item["Id"])
         return None
 
-    def refresh(self, item_id: uuid.UUID, recursive: bool = True) -> None:
-        self._post(
-            f"/Items/{item_id}/Refresh",
-            params={"Recursive": str(recursive).lower()},
-        )
+    def refresh(
+        self,
+        item_id: uuid.UUID,
+        recursive: bool = True,
+        image_refresh_mode: str | None = None,
+    ) -> None:
+        params = {"Recursive": str(recursive).lower()}
+        if image_refresh_mode:
+            params["ImageRefreshMode"] = image_refresh_mode
+            params["MetadataRefreshMode"] = image_refresh_mode
+        self._post(f"/Items/{item_id}/Refresh", params=params)
 
     def refresh_full(self) -> None:
         self._post("/Library/Refresh")

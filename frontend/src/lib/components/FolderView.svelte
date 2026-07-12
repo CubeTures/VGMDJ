@@ -155,6 +155,7 @@
 		{#if entry.isDir}
 			<FolderButton
 				text={entry.name}
+				dirs={dirs.concat(entry.name)}
 				metadata={entry.metadata as FolderMetadata}
 				onclick={() => open(entry.name)}
 				hidden={false}

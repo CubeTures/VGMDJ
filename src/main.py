@@ -1,28 +1,38 @@
+import asyncio
 import csv
 import io
+import json
 import os
+from contextlib import asynccontextmanager
 from pathlib import Path
 from typing import Any
-import json
 
-from fastapi import Body, FastAPI, File, HTTPException, BackgroundTasks, UploadFile
+from fastapi import (
+    BackgroundTasks,
+    Body,
+    FastAPI,
+    File,
+    Form,
+    HTTPException,
+    Query,
+    UploadFile,
+)
 from fastapi.middleware.cors import CORSMiddleware
+from fastapi.responses import FileResponse, StreamingResponse
 from fastapi.staticfiles import StaticFiles
-from fastapi.responses import StreamingResponse
 from pydantic import BaseModel
-from contextlib import asynccontextmanager
-import asyncio
 
 from src import JELLYFIN_TOKEN, JELLYFIN_URL
-from src.status import set_loop, subscribe, unsubscribe
 from src.auto_hide import refresh_auto_hidden
 from src.constants import MUSIC_EXTENSIONS
+from src.cover import get_cover_image, embed_cover, write_cover
 from src.ignore import add_ignore, read_ignore, remove_ignore
 from src.jellyfin import JellyfinClient
-from src.metadata import TrackMeta, get_hidden_count, read_metadata
-from src.prefs import load_prefs, save_prefs, PREFS_FILE
-from src.utils import dirs_to_path, refresh_dir_or_fallback, lock_file
 from src.khinsider import DownloadInfo, run_download
+from src.metadata import TrackMeta, get_hidden_count, read_metadata
+from src.prefs import PREFS_FILE, load_prefs, save_prefs
+from src.status import set_loop, subscribe, unsubscribe
+from src.utils import dirs_to_path, lock_file, refresh_dir_or_fallback
 
 _client = JellyfinClient(JELLYFIN_URL, JELLYFIN_TOKEN)
 
@@ -171,23 +181,49 @@ def download_status() -> StreamingResponse:
     return StreamingResponse(stream(), media_type="text/event-stream")
 
 
-@app.post("/cover/album_artist")
-def album_artist_cover(dirs: list[str], image: str):
-    # have setting to specify what kind image it is
-    # 	artist = set artist.png
-    # 	album = set cover.png
-    # 	tracks = set all track images
-    #
-    # hit refresh endpoint with imageRefreshMode=FullRefresh
-    # search using kind of image (artist, for artist; album / tracks, for album)
-    # start by manually changing the image and hit api endpoint to try refresh
+@app.get("/cover")
+def get_cover(dirs: list[str] = Query(default=[])):
+    path = get_cover_image(dirs)
+    if path:
+        return FileResponse(path)
+    raise HTTPException(404)
 
-    pass
+
+@app.post("/cover/album_artist")
+async def album_artist_cover(
+    dirs: str = Form(...),
+    image: UploadFile = File(...),
+):
+    dirs_list: list[str] = json.loads(dirs)
+    base = dirs_to_path(dirs_list)
+    data = await image.read()
+
+    write_cover(base, "folder", image.content_type, data)
+    refresh_dir_or_fallback(_client, dirs_list, image_refresh_mode="FullRefresh")
 
 
 @app.post("/cover/album")
-def album_cover(dirs: list[str], image: str, override_tracks: bool = False):
-    pass
+async def album_cover(
+    dirs: str = Form(...),
+    image: UploadFile = File(...),
+    override_tracks: bool = Form(False),
+):
+    dirs_list: list[str] = json.loads(dirs)
+    base = dirs_to_path(dirs_list)
+    data = await image.read()
+
+    mime = write_cover(base, "cover", image.content_type, data)
+
+    if override_tracks:
+        for entry in os.scandir(base):
+            if (
+                entry.is_dir()
+                or Path(entry.name).suffix.lower() not in MUSIC_EXTENSIONS
+            ):
+                continue
+            embed_cover(Path(entry.path), data, mime)
+
+    refresh_dir_or_fallback(_client, dirs_list, image_refresh_mode="FullRefresh")
 
 
 STATIC_DIR = Path(__file__).parent.parent / "frontend" / "build"

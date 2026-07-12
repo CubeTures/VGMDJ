@@ -13,8 +13,7 @@ A multifaceted tool for operating a video game music library.
 
 ## TODO
 
-- KHInsider download
-    - Status
-- Set cover art of album
-- Set cover art of artist
-- Set cover art of all songs in a dir
+- Set cover art of tracks
+- Set cover for album artists
+- Set track and disc number of tracks
+- Set title and artist text fields
