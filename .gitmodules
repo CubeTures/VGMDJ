@@ -1,0 +1,3 @@
+[submodule "pykhinsider"]
+	path = pykhinsider
+	url = git@github.com:fenwaypowers/pykhinsider.git

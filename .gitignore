@@ -1,7 +1,7 @@
 .venv
 *.env
 src/__pycache__
-pykhinsider
 Music
 Working
 deploy.sh
+music

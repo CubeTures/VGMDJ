@@ -77,9 +77,10 @@ class JellyfinClient:
                     item = session["NowPlayingItem"]
                     song = Song()
                     song.id = uuid.UUID(item["Id"])
-                    song.file_name = str(Path(item["Path"]).name)
-                    song.album = item["Album"]
-                    song.album_artist = item["AlbumArtist"]
+                    path = Path(item["Path"])
+                    song.file_name = path.name
+                    song.album = path.parent.name
+                    song.album_artist = path.parent.parent.name
                     return song
 
         return None

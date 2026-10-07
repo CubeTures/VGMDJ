@@ -47,7 +47,6 @@ def create_downloader(info: DownloadInfo):
     func: DownloadFunc = lambda callback: album.download_all(
         info.quality,
         dest=str(info.tmp_franchise_folder()),
-        print_progress=True,
         flaresolverr_url=FLARESOLVERR_URL,
         progress_callback=callback,
     )
