@@ -26,7 +26,7 @@ from src import JELLYFIN_TOKEN, JELLYFIN_URL
 from src.auto_hide import refresh_auto_hidden
 from src.constants import MUSIC_EXTENSIONS
 from src.cover import get_cover_image, embed_cover, write_cover
-from src.ignore import add_ignore, read_ignore, remove_ignore
+from src.ignore import read_ignore, update_ignore
 from src.jellyfin import JellyfinClient
 from src.khinsider import DownloadInfo, run_download
 from src.metadata import TrackMeta, get_hidden_count, read_metadata
@@ -100,9 +100,8 @@ def hide(hidden: dict[str, bool], dirs: list[str] = []):
     ignore = base / ".ignore"
     add = [f for (f, hide) in hidden.items() if hide]
     remove = [f for (f, hide) in hidden.items() if not hide]
-    add_ignore(ignore, add)
-    remove_ignore(ignore, remove)
-    refresh_dir_or_fallback(_client, dirs)
+    if update_ignore(ignore, add, remove):
+        refresh_dir_or_fallback(_client, dirs)
 
 
 @app.post("/boo")

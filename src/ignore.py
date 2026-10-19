@@ -1,7 +1,17 @@
 import json
+import os
 import re
 from pathlib import Path
 from typing import Any
+
+from filelock import FileLock
+
+from src import WORKING_DIR
+from src.utils import lock_file
+
+
+def ignore_lock() -> FileLock:
+    return lock_file(Path(WORKING_DIR) / "ignore")
 
 
 def _escape_ignore(entry: str) -> str:
@@ -31,20 +41,25 @@ def write_ignore(path: Path, entries: dict[str, dict[str, Any]]) -> None:
     for filename in sorted(entries):
         lines.append(f"#!meta {json.dumps(entries[filename], separators=(',', ':'))}")
         lines.append(_escape_ignore(filename))
-    path.write_text("\n".join(lines))
+    tmp = path.with_name(path.name + ".tmp")
+    tmp.write_text("\n".join(lines))
+    os.replace(tmp, path)
 
 
-def add_ignore(
-    path: Path, entries: list[str], meta: dict[str, Any] | None = None
-) -> None:
-    current = read_ignore(path)
-    for e in entries:
-        current[e] = meta or {}
-    write_ignore(path, current)
-
-
-def remove_ignore(path: Path, entries: list[str]) -> None:
-    current = read_ignore(path)
-    for e in entries:
-        current.pop(e, None)
-    write_ignore(path, current)
+def update_ignore(
+    path: Path,
+    add: list[str],
+    remove: list[str],
+    meta: dict[str, Any] | None = None,
+) -> bool:
+    with ignore_lock():
+        current = read_ignore(path)
+        updated = dict(current)
+        for e in add:
+            updated[e] = meta or {}
+        for e in remove:
+            updated.pop(e, None)
+        if updated == current:
+            return False
+        write_ignore(path, updated)
+        return True

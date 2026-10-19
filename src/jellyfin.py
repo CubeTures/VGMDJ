@@ -43,13 +43,14 @@ class JellyfinClient:
                 "SearchTerm": name,
                 "IncludeItemTypes": media_type,
                 "Recursive": "true",
+                "Fields": "Path",
             },
         )
 
     def search_folder(self, album: str, album_artist: str) -> uuid.UUID | None:
         data = self.search(album, MediaType.MUSIC_ALBUM)
         for item in data["Items"]:
-            if "AlbumArtist" in item and item["AlbumArtist"] == album_artist:
+            if "Path" in item and Path(item["Path"]).parts[-2:] == (album_artist, album):
                 return uuid.UUID(item["Id"])
         return None
 
