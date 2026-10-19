@@ -156,14 +156,13 @@ async def download_csv(
     content: bytes = await file.read()
     decoded: str = content.decode("utf-8")
     reader = csv.reader(io.StringIO(decoded))
-    rows: list[list[str]] = [row for row in reader]
+    infos = [DownloadInfo(row[0], row[1], row[2], row[3]) for row in reader]
 
-    def download_all(rows: list[list[str]]) -> None:
-        for row in rows:
-            info = DownloadInfo(row[0], row[1], row[2], row[3])
+    def download_all(infos: list[DownloadInfo]) -> None:
+        for info in infos:
             run_download(_client, info)
 
-    background_tasks.add_task(download_all, rows)
+    background_tasks.add_task(download_all, infos)
 
 
 @app.get("/download-status")

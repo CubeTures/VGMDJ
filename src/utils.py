@@ -3,6 +3,7 @@ from functools import reduce
 from pathlib import Path
 from typing import cast
 
+from fastapi import HTTPException
 from filelock import FileLock
 from mutagen._file import File, FileType  # type: ignore
 
@@ -31,8 +32,20 @@ def tag_folder(album: str, album_artist: str, path: Path):
         tags.save()  # type: ignore
 
 
+def check_segment(name: str) -> str:
+    """Reject anything that isn't a single plain path component (no traversal)."""
+    if (
+        name in ("", ".", "..")
+        or os.sep in name
+        or (os.altsep and os.altsep in name)
+        or "\0" in name
+    ):
+        raise HTTPException(400, f"Invalid path segment: {name!r}")
+    return name
+
+
 def dirs_to_path(dirs: list[str]) -> Path:
-    return reduce(lambda acc, f: acc / f, dirs, Path(MUSIC_DIR))
+    return reduce(lambda acc, f: acc / check_segment(f), dirs, Path(MUSIC_DIR))
 
 
 def path_to_dirs(path: Path) -> list[str]:

@@ -13,7 +13,7 @@ from src.auto_hide import refresh_auto_hidden_single
 from src.jellyfin import JellyfinClient
 from src.prefs import load_prefs
 from src.status import DownloadFunc, DownloadRunner, Status
-from src.utils import tag_folder
+from src.utils import check_segment, tag_folder
 
 
 @dataclass
@@ -22,6 +22,11 @@ class DownloadInfo:
     franchise: str
     url: str
     quality: str
+
+    def __post_init__(self):
+        check_segment(self.game)
+        check_segment(self.franchise)
+        check_segment(self.album)
 
     @property
     def album(self) -> str:
