@@ -22,7 +22,7 @@
 />
 
 {#if Object.keys(messages).length > 0}
-	{#each Object.keys(messages).toSorted().toReversed() as id}
+	{#each Object.keys(messages).toSorted().toReversed() as id (id)}
 		{@const message = messages[id]}
 		<div class="border bg-mauve-200 border-mauve-400 p-2 gap-2 rounded">
 			<div class="flex flex-col">

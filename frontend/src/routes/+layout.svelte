@@ -6,6 +6,7 @@
 		HardDriveDownloadIcon,
 		SettingsIcon,
 	} from "@lucide/svelte";
+	import { resolve } from "$app/paths";
 	import { page } from "$app/state";
 
 	let { children } = $props();
@@ -23,17 +24,19 @@
 	<div class="grow overflow-y-scroll bg-mauve-50 relative">
 		{@render children()}
 	</div>
-	<div class="bg-mauve-200 flex justify-around p-6 border-t border-t-mauve-400">
+	<div
+		class="bg-mauve-200 flex justify-around p-6 border-t border-t-mauve-400"
+	>
 		<a
-			href="/"
+			href={resolve("/")}
 			class={path == "/" ? "" : "unselected"}><HardDriveDownloadIcon /></a
 		>
 		<a
-			href="/files"
+			href={resolve("/files")}
 			class={path == "/files/" ? "" : "unselected"}><FolderIcon /></a
 		>
 		<a
-			href="/prefs"
+			href={resolve("/prefs")}
 			class={path == "/prefs/" ? "" : "unselected"}><SettingsIcon /></a
 		>
 	</div>

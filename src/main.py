@@ -25,7 +25,7 @@ from pydantic import BaseModel
 from src import JELLYFIN_TOKEN, JELLYFIN_URL
 from src.auto_hide import refresh_auto_hidden
 from src.constants import MUSIC_EXTENSIONS
-from src.cover import get_cover_image, embed_cover, write_cover
+from src.cover import embed_cover, get_cover_image, write_cover
 from src.ignore import read_ignore, update_ignore
 from src.jellyfin import JellyfinClient
 from src.khinsider import DownloadInfo, run_download

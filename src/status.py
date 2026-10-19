@@ -1,9 +1,8 @@
-from threading import Lock
-from typing import Callable, Any
+from asyncio import AbstractEventLoop, Queue
 from enum import StrEnum, auto
-from time import time, monotonic
-
-from asyncio import Queue, AbstractEventLoop
+from threading import Lock
+from time import monotonic, time
+from typing import Any, Callable
 
 type DownloadFunc = Callable[[Callable[[str], None] | None], None]
 

@@ -46,7 +46,10 @@
 
 <button
 	{...rest}
-	class={cn("bg-mauve-200 border border-mauve-400 rounded-full p-2", rest.class)}
+	class={cn(
+		"bg-mauve-200 border border-mauve-400 rounded-full p-2",
+		rest.class
+	)}
 	onclick={click}
 >
 	{#if loading}

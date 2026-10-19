@@ -1,18 +1,19 @@
 import os
 import shutil
+from dataclasses import asdict, dataclass
 from pathlib import Path
-from urllib.parse import urlparse
-from dataclasses import dataclass, asdict
-from uuid_utils import uuid7
 from time import sleep
+from urllib.parse import urlparse
+
+from uuid_utils import uuid7
 
 from pykhinsider import Album
-from src import MUSIC_DIR, TMP_DIR, FLARESOLVERR_URL
-from src.utils import tag_folder
-from src.status import DownloadRunner, DownloadFunc, Status
+from src import FLARESOLVERR_URL, MUSIC_DIR, TMP_DIR
 from src.auto_hide import refresh_auto_hidden_single
 from src.jellyfin import JellyfinClient
 from src.prefs import load_prefs
+from src.status import DownloadFunc, DownloadRunner, Status
+from src.utils import tag_folder
 
 
 @dataclass

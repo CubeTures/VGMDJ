@@ -4,7 +4,6 @@
 		CheckIcon,
 		CornerLeftUpIcon,
 		Disc3Icon,
-		EyeClosedIcon,
 		EyeIcon,
 		EyeOffIcon,
 		FrownIcon,
@@ -122,7 +121,7 @@
 					total + 1,
 					visible + (e.isHidden ? 0 : 1),
 				],
-				[0, 0],
+				[0, 0]
 			);
 		return `${visible}/${total}`;
 	}
@@ -151,7 +150,7 @@
 			{dirs.length == 0 ? "Root" : dirs[dirs.length - 1]}
 		</h2>
 	</div>
-	{#each entries as entry}
+	{#each entries as entry (entry.name)}
 		{#if entry.isDir}
 			<FolderButton
 				text={entry.name}
@@ -178,7 +177,7 @@
 					: hidden[entry.name]}
 			{#if showHidden || !entry.isHidden}
 				<MediaButton
-					metadata={entry.metadata!}
+					metadata={meta}
 					onclick={() => hide(entry.name)}
 					hidden={_hidden}
 				/>
