@@ -2,10 +2,10 @@ import json
 from dataclasses import asdict, dataclass
 from pathlib import Path
 
-from src import WORKING_DIR
+from src import CONFIG_DIR
 from src.utils import lock_file
 
-PREFS_FILE = Path(WORKING_DIR) / "prefs.json"
+PREFS_FILE = Path(CONFIG_DIR) / "prefs.json"
 
 
 # add pref for update speed for streams

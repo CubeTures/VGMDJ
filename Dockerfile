@@ -10,5 +10,7 @@ RUN uv sync --frozen --no-dev
 COPY src/ ./src/
 COPY frontend/build/ ./frontend/build/
 
+ENV CONFIG_DIR=/config TMP_DIR=/tmp MUSIC_DIR=/music
+
 EXPOSE 8000
 CMD ["uv", "run", "uvicorn", "src.main:app", "--host", "0.0.0.0", "--port", "8000"]

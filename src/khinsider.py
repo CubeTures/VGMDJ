@@ -7,7 +7,7 @@ from uuid_utils import uuid7
 from time import sleep
 
 from pykhinsider import Album
-from src import MUSIC_DIR, WORKING_DIR, FLARESOLVERR_URL
+from src import MUSIC_DIR, TMP_DIR, FLARESOLVERR_URL
 from src.utils import tag_folder
 from src.status import DownloadRunner, DownloadFunc, Status
 from src.auto_hide import refresh_auto_hidden_single
@@ -34,7 +34,7 @@ class DownloadInfo:
         return self.franchise_folder() / self.game
 
     def tmp_franchise_folder(self) -> Path:
-        return Path(WORKING_DIR) / "tmp" / self.franchise
+        return Path(TMP_DIR) / self.franchise
 
     def tmp_album_folder(self) -> Path:
         return self.tmp_franchise_folder() / self.album

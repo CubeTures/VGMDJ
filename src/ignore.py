@@ -6,12 +6,12 @@ from typing import Any
 
 from filelock import FileLock
 
-from src import WORKING_DIR
+from src import CONFIG_DIR
 from src.utils import lock_file
 
 
 def ignore_lock() -> FileLock:
-    return lock_file(Path(WORKING_DIR) / "ignore")
+    return lock_file(Path(CONFIG_DIR) / "ignore")
 
 
 def _escape_ignore(entry: str) -> str:

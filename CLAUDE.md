@@ -29,13 +29,13 @@ Deploy: `./deploy.sh` builds the frontend, builds the Docker image, and pushes i
 
 ## Configuration
 
-Backend config comes from environment variables loaded via `.env` (see `.env.example`): `WORKING_DIR`, `MUSIC_DIR`, `JELLYFIN_URL`, `JELLYFIN_USER_ID`, `JELLYFIN_TOKEN`, `FLARESOLVERR_URL`. These are read once at import time in `src/__init__.py` and required (no defaults) — the process fails fast if any are missing.
+Backend config comes from environment variables loaded via `.env` (see `.env.example`): `CONFIG_DIR`, `TMP_DIR`, `MUSIC_DIR`, `JELLYFIN_URL`, `JELLYFIN_USER_ID`, `JELLYFIN_TOKEN`, `FLARESOLVERR_URL`. These are read once at import time in `src/__init__.py` and required (no defaults in code) — the process fails fast if any are missing. The Docker image sets `CONFIG_DIR=/config`, `TMP_DIR=/tmp`, `MUSIC_DIR=/music` to match the Kubernetes volume mounts.
 
-`WORKING_DIR` holds app state (`prefs.json`, `status.json`, tmp download staging). `MUSIC_DIR` is the root of the actual music library on disk.
+`CONFIG_DIR` holds persistent app state (`prefs.json`, lock files). `TMP_DIR` is scratch space where downloads are staged (`TMP_DIR/<franchise>/<album>`) before being moved into `MUSIC_DIR`, the root of the actual music library on disk.
 
 ## Architecture
 
-**`pykhinsider/`** is a separate, independently-versioned local package (installed via `uv` path dependency, editable) that does the actual scraping/downloading from KHInsider (using FlareSolverr to get past Cloudflare). `src/khinsider.py` in the main app wraps it with app-specific logic (staging to `tmp/`, tagging, moving into `MUSIC_DIR`, notifying Jellyfin).
+**`pykhinsider/`** is a separate, independently-versioned local package (installed via `uv` path dependency, editable) that does the actual scraping/downloading from KHInsider (using FlareSolverr to get past Cloudflare). `src/khinsider.py` in the main app wraps it with app-specific logic (staging to `TMP_DIR`, tagging, moving into `MUSIC_DIR`, notifying Jellyfin).
 
 **Library layout on disk**: `MUSIC_DIR/<album_artist>/<album>/<tracks...>`. Most backend endpoints take a `dirs: list[str]` that is joined onto `MUSIC_DIR` (see `utils.dirs_to_path`) rather than an opaque path, so the frontend always addresses folders by their path segments relative to the music root.
 
