@@ -16,6 +16,9 @@ dependencies = [
 	"uuid-utils>=0.16.0",
 ]
 
+[tool.ruff]
+extend-exclude = ["pykhinsider"]
+
 [tool.ruff.lint]
 select = ["I"]
 

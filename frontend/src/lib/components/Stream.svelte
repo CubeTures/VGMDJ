@@ -22,7 +22,7 @@
 
 	onMount(() => {
 		stream = new EventSource(
-			`${PUBLIC_API_URL}${endpoint}${params.toString()}`,
+			`${PUBLIC_API_URL}${endpoint}${params.toString()}`
 		);
 		stream.onmessage = (event) => onmessage(event.data);
 	});

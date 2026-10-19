@@ -28,13 +28,12 @@
 	{/if}
 {/snippet}
 
-<!-- svelte-ignore a11y_interactive_supports_focus -->
 <!-- svelte-ignore a11y_click_events_have_key_events -->
 <!-- svelte-ignore a11y_no_static_element_interactions -->
 <div
 	class={cn(
 		"p-2 border border-mauve-400 rounded text-left bg-mauve-200 flex gap-1",
-		hidden ? "bg-mauve-50 border-mauve-50 text-mauve-400" : "",
+		hidden ? "bg-mauve-50 border-mauve-50 text-mauve-400" : ""
 	)}
 	{onclick}
 >

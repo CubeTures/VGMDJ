@@ -14,7 +14,7 @@
 
 	let coverVersion = $state(0);
 	const coverUrl = $derived(
-		`${PUBLIC_API_URL}/cover?${dirs.map((d) => `dirs=${encodeURIComponent(d)}`).join("&")}&v=${coverVersion}`,
+		`${PUBLIC_API_URL}/cover?${dirs.map((d) => `dirs=${encodeURIComponent(d)}`).join("&")}&v=${coverVersion}`
 	);
 
 	let fileInput: HTMLInputElement | undefined = $state();
@@ -55,7 +55,7 @@
 		type="button"
 		class={cn(
 			"size-32 self-center rounded border border-mauve-400 flex items-center justify-center overflow-hidden",
-			coverMissing && !file ? "bg-mauve-50 text-mauve-400" : "",
+			coverMissing && !file ? "bg-mauve-50 text-mauve-400" : ""
 		)}
 		onclick={() => fileInput?.click()}
 	>
@@ -89,7 +89,7 @@
 			Set all track images
 		</label>
 	{/if}
-	
+
 	<div class="flex justify-end">
 		<AsyncButton onclick={upload} />
 	</div>
