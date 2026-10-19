@@ -1,11 +1,12 @@
-FROM python:3.13-slim
+FROM ghcr.io/astral-sh/uv:0.11.3-python3.13-trixie-slim
 
-COPY --from=ghcr.io/astral-sh/uv:latest /uv /uvx /bin/
 WORKDIR /app
+
+RUN pip uninstall -y pip
 
 COPY pyproject.toml uv.lock ./
 COPY pykhinsider/ ./pykhinsider/
-RUN uv sync --frozen --no-dev
+RUN uv sync --frozen --no-dev --no-cache
 
 COPY src/ ./src/
 COPY frontend/build/ ./frontend/build/
