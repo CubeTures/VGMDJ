@@ -67,6 +67,7 @@ class JellyfinClient:
         if image_refresh_mode:
             params["ImageRefreshMode"] = image_refresh_mode
             params["MetadataRefreshMode"] = image_refresh_mode
+            params["ReplaceAllImages"] = "true"
         self._post(f"/Items/{item_id}/Refresh", params=params)
 
     def refresh_full(self) -> None:

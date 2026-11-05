@@ -17,3 +17,6 @@ A multifaceted tool for operating a video game music library.
 - Set cover for album artists
 - Set track and disc number of tracks
 - Set title and artist text fields
+- Refactor and nest files
+- Look into music suggestion using [VGMDB CDDB](https://vgmdb.net/forums/showthread.php?t=2618)
+- Allow for the uploading of folders or zips for automatic tagging and uploading

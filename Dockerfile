@@ -2,9 +2,6 @@ FROM ghcr.io/astral-sh/uv:0.13.1-python3.13-trixie-slim
 
 WORKDIR /app
 
-RUN apt-get update && apt-get upgrade -y && rm -rf /var/lib/apt/lists/*
-RUN pip uninstall -y pip
-
 COPY pyproject.toml uv.lock ./
 COPY pykhinsider/ ./pykhinsider/
 RUN uv sync --frozen --no-dev --no-cache

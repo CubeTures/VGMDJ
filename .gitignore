@@ -1,7 +1,4 @@
 .venv
 *.env
 src/__pycache__
-Music
-Working
-deploy.sh
-music
+dev
